@@ -25,9 +25,8 @@ public class ProfitTrackerClient implements ClientModInitializer {
         Settings.load();
         Ledger.load();
 
-        KeyBinding.Category category = KeyBinding.Category.create(Identifier.of(MOD_ID, "keys"));
         menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key." + MOD_ID + ".menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_P, category));
+                "key." + MOD_ID + ".menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_P, "category." + MOD_ID));
 
         // P opens the menu from anywhere in the game
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
