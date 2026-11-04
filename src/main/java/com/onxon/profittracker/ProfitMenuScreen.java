@@ -255,7 +255,6 @@ public class ProfitMenuScreen extends Screen {
         String hint = (scroll + 1) + "-" + Math.min(list.size(), scroll + visible) + " of " + list.size();
         Draw.textRight(ctx, tr, hint, x + contentW, y + contentH - 8, Draw.DIM);
     }
-
     // ---------- Settings ----------
 
     private void drawSettings(DrawContext ctx, TextRenderer tr) {
@@ -296,4 +295,104 @@ public class ProfitMenuScreen extends Screen {
                     for (int i = 0; i < Settings.OPACITIES.length; i++) {
                         if (Math.abs(Settings.OPACITIES[i] - s.opacity) < 0.01f) idx = i;
                     }
-                    s.opacity = Settings.OPACITIES[(idx + 1) %
+                    s.opacity = Settings.OPACITIES[(idx + 1) % Settings.OPACITIES.length];
+                    Settings.save();
+                });
+
+        settingRow(ctx, tr, x, y + r++ * rowH, w, "Accent colour",
+                String.format("#%06X", s.accentRgb), () -> {
+                    int idx = 0;
+                    for (int i = 0; i < Settings.ACCENTS.length; i++) {
+                        if (Settings.ACCENTS[i] == s.accentRgb) idx = i;
+                    }
+                    s.accentRgb = Settings.ACCENTS[(idx + 1) % Settings.ACCENTS.length];
+                    Settings.save();
+                });
+
+        settingRow(ctx, tr, x, y + r++ * rowH, w, "Move the HUD panels", "Open",
+                () -> MinecraftClient.getInstance().setScreen(new HudLayoutScreen(this)));
+
+        settingRow(ctx, tr, x, y + r++ * rowH, w, "Reset session totals", "Reset",
+                () -> {
+                    Ledger.get().resetSession();
+                    scroll = 0;
+                });
+
+        settingRow(ctx, tr, x, y + r++ * rowH, w, "Erase ALL payment history",
+                confirmClear ? "Click again" : "Erase", () -> {
+                    if (!confirmClear) {
+                        confirmClear = true;
+                    } else {
+                        Ledger.get().clearAll();
+                        confirmClear = false;
+                    }
+                });
+
+        Draw.text(ctx, tr, "Chat patterns: config/donut-profit-tracker/config.json", x, y + r * rowH + 4, Draw.DIM);
+    }
+
+    private void settingRow(DrawContext ctx, TextRenderer tr, int x, int y, int w, String label, String buttonLabel, Runnable action) {
+        Draw.text(ctx, tr, label, x, y + 4, Draw.WHITE);
+        button(ctx, x + w - 120, y, 120, 16, buttonLabel, false, action);
+    }
+
+    // ---------- Shared pieces ----------
+
+    private void scopeButton(DrawContext ctx, int x, int y) {
+        Settings s = Settings.get();
+        button(ctx, x, y, 100, 16, s.sessionOnly ? "Scope: session" : "Scope: all time", false, () -> {
+            s.sessionOnly = !s.sessionOnly;
+            scroll = 0;
+            Settings.save();
+        });
+    }
+
+    private void popButton(DrawContext ctx, int x, int y, int w, int h, String id, String name) {
+        boolean on = Settings.get().widget(id).visible;
+        button(ctx, x, y, w, h, (on ? "Close " : "Pop out ") + name, on, () -> toggleWidget(id));
+    }
+
+    private void toggleWidget(String id) {
+        Settings.WidgetPos p = Settings.get().widget(id);
+        p.visible = !p.visible;
+        Settings.save();
+    }
+
+    private void button(DrawContext ctx, int x, int y, int w, int h, String label, boolean active, Runnable action) {
+        boolean hover = inside(mouseX, mouseY, x, y, w, h);
+        Draw.button(ctx, textRenderer, x, y, w, h, label, accent, active, hover);
+        buttons.add(new Btn(x, y, w, h, action));
+    }
+
+    private static boolean inside(double mx, double my, int x, int y, int w, int h) {
+        return mx >= x && mx < x + w && my >= y && my < y + h;
+    }
+
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (button == 0) {
+            for (Btn b : buttons) {
+                if (inside(mx, my, b.x(), b.y(), b.w(), b.h())) {
+                    b.action().run();
+                    return true;
+                }
+            }
+        }
+        return super.mouseClicked(mx, my, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mx, double my, double horizontal, double vertical) {
+        if (tab == Tab.TRANSACTIONS || tab == Tab.GAMBLERS) {
+            scroll = Math.max(0, scroll - (int) Math.signum(vertical));
+            return true;
+        }
+        return super.mouseScrolled(mx, my, horizontal, vertical);
+    }
+
+    @Override
+    public void close() {
+        Settings.save();
+        MinecraftClient.getInstance().setScreen(parent);
+    }
+}
