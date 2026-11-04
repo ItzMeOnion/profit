@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "donut_profit_tracker",
+  "version": "${version}",
+  "name": "Donut Profit Tracker",
+  "description": "Tracks every payment in and out on Donut SMP, shows profit or loss on a pop-out HUD, and ranks your gamblers.",
+  "authors": [
+    "Onxon"
+  ],
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.onxon.profittracker.ProfitTrackerClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.17.2",
+    "minecraft": "~1.21.8",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
