@@ -64,7 +64,7 @@ public class ProfitMenuScreen extends Screen {
     }
 
     @Override
-    protected void renderBackground(DrawContext ctx, int mx, int my, float delta) {
+    public void renderBackground(DrawContext ctx, int mx, int my, float delta) {
         // "Clean background" skips the vanilla dim, so the panel floats over the game
         if (!Settings.get().cleanBackground) super.renderBackground(ctx, mx, my, delta);
     }
