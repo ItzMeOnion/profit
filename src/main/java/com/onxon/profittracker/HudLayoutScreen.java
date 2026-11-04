@@ -2,7 +2,6 @@ package com.onxon.profittracker;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -10,7 +9,7 @@ import net.minecraft.text.Text;
 /** Drag the pop-out panels anywhere on screen. Positions save as you let go. */
 public class HudLayoutScreen extends Screen {
     private static final String[] ORDER = {HudWidgets.GAMBLERS, HudWidgets.FEED, HudWidgets.SUMMARY};
-    private static final String HINT = "DRAG TO MOVE  ·  ESC TO SAVE";
+    private static final String HINT = "DRAG TO MOVE  \u00B7  ESC TO SAVE";
 
     private final Screen parent;
     private String dragging;
@@ -72,44 +71,43 @@ public class HudLayoutScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
-        double x = click.x();
-        double y = click.y();
-        if (inside(x, y, doneX(), doneY(), 80, 18)) {
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (button != 0) return super.mouseClicked(mx, my, button);
+        if (inside(mx, my, doneX(), doneY(), 80, 18)) {
             close();
             return true;
         }
         for (String id : ORDER) {
             Settings.WidgetPos p = Settings.get().widget(id);
-            if (p.visible && inside(x, y, p.x, p.y, HudWidgets.width(id), HudWidgets.height(id))) {
+            if (p.visible && inside(mx, my, p.x, p.y, HudWidgets.width(id), HudWidgets.height(id))) {
                 dragging = id;
-                grabX = (int) x - p.x;
-                grabY = (int) y - p.y;
+                grabX = (int) mx - p.x;
+                grabY = (int) my - p.y;
                 return true;
             }
         }
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(mx, my, button);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
-        if (dragging == null) return super.mouseDragged(click, offsetX, offsetY);
+    public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
+        if (dragging == null) return super.mouseDragged(mx, my, button, dx, dy);
         Settings.WidgetPos p = Settings.get().widget(dragging);
         int maxX = Math.max(0, width - HudWidgets.width(dragging));
         int maxY = Math.max(0, height - HudWidgets.height(dragging));
-        p.x = Math.max(0, Math.min(maxX, (int) click.x() - grabX));
-        p.y = Math.max(0, Math.min(maxY, (int) click.y() - grabY));
+        p.x = Math.max(0, Math.min(maxX, (int) mx - grabX));
+        p.y = Math.max(0, Math.min(maxY, (int) my - grabY));
         return true;
     }
 
     @Override
-    public boolean mouseReleased(Click click) {
+    public boolean mouseReleased(double mx, double my, int button) {
         if (dragging != null) {
             dragging = null;
             Settings.save();
             return true;
         }
-        return super.mouseReleased(click);
+        return super.mouseReleased(mx, my, button);
     }
 
     @Override
